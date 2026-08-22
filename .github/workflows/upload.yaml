@@ -10,33 +10,22 @@ jobs:
   test:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v1
+    - uses: actions/checkout@v4
 
-    - name: ACTIONS_ALLOW_UNSECURE_COMMANDS
-      id: ACTIONS_ALLOW_UNSECURE_COMMANDS
-      run: echo 'ACTIONS_ALLOW_UNSECURE_COMMANDS=true' >> $GITHUB_ENV
+    - uses: calcit-lang/setup-calcit@v1
+      with:
+        tools: calcit,caps
 
-    - name: add cr
-      run: |
-        mkdir -p $GITHUB_WORKSPACE/bin
-        wget -O $GITHUB_WORKSPACE/bin/cr https://github.com/calcit-lang/calcit/releases/download/0.6.1/cr
-        chmod +x $GITHUB_WORKSPACE/bin/cr
-        echo "::add-path::$GITHUB_WORKSPACE/bin"
+    - name: prepare modules
+      run: caps --ci
 
-    - name: "prepare modules"
+    - name: compile and build
       run: >
-        mkdir -p ~/.config/calcit/modules/ && cd ~/.config/calcit/modules/
-        && git clone https://github.com/calcit-lang/lilac.git
-        && git clone https://github.com/calcit-lang/memof.git
-        && git clone https://github.com/Respo/respo.calcit.git
-        && git clone https://github.com/Respo/respo-ui.calcit.git
-        && git clone https://github.com/Phlox-GL/phlox.git
-
-    - name: "compiles to js"
-      run: >
-        cr --emit-js --once
-        && cp assets/* js-out/
-        && yarn && yarn vite build --base=./
+        calcit calcit.cirru js
+        && corepack enable
+        && corepack prepare yarn@4.12.0 --activate
+        && yarn install --immutable
+        && yarn vite build --base=./
 
     - name: Deploy to server
       id: deploy
