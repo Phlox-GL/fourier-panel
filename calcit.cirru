@@ -3,7 +3,7 @@
   :entries $ {}
     :default $ {} (:description |) (:init-fn 'app.main/main!) (:mode :native) (:reload-fn 'app.main/reload!)
       :feature-policy $ {}
-      :modules $ [] |memof/ |lilac/ |phlox/ |respo.calcit/ |respo-ui.calcit/
+      :modules $ [] |phlox/ |respo.calcit/ |respo-ui.calcit/
       :type-slots $ {}
   :files $ {}
     |app.comp.container $ %{} 'FileEntry
@@ -197,10 +197,9 @@
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote
           ns app.comp.container $ :require
-            [] phlox.core :refer $ [] defcomp g hslx rect circle text container graphics create-list >>
-            [] respo-ui.core :as ui
-            [] memof.alias :refer $ [] memof-call
-            [] phlox.comp.slider :refer $ [] comp-slider
+            phlox.core :refer $ defcomp g hslx rect circle text container graphics create-list >>
+            respo-ui.core :as ui
+            phlox.comp.slider :refer $ comp-slider
     |app.config $ %{} 'FileEntry
       :defs $ {}
         |cdn? $ %{} 'CodeEntry (:doc |)
