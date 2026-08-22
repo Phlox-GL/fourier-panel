@@ -10,33 +10,35 @@ jobs:
   test:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v1
+    - uses: actions/checkout@v4
 
-    - name: ACTIONS_ALLOW_UNSECURE_COMMANDS
-      id: ACTIONS_ALLOW_UNSECURE_COMMANDS
-      run: echo 'ACTIONS_ALLOW_UNSECURE_COMMANDS=true' >> $GITHUB_ENV
+    - uses: actions/setup-node@v6
+      with:
+        node-version: 24
 
-    - name: add cr
+    - uses: calcit-lang/setup-calcit@v1
+      with:
+        tools: calcit,caps
+
+    - name: Enable Corepack
       run: |
-        mkdir -p $GITHUB_WORKSPACE/bin
-        wget -O $GITHUB_WORKSPACE/bin/cr https://github.com/calcit-lang/calcit/releases/download/0.6.1/cr
-        chmod +x $GITHUB_WORKSPACE/bin/cr
-        echo "::add-path::$GITHUB_WORKSPACE/bin"
+        corepack enable
+        corepack prepare yarn@4.12.0 --activate
+        yarn --version
 
-    - name: "prepare modules"
-      run: >
-        mkdir -p ~/.config/calcit/modules/ && cd ~/.config/calcit/modules/
-        && git clone https://github.com/calcit-lang/lilac.git
-        && git clone https://github.com/calcit-lang/memof.git
-        && git clone https://github.com/Respo/respo.calcit.git
-        && git clone https://github.com/Respo/respo-ui.calcit.git
-        && git clone https://github.com/Phlox-GL/phlox.git
+    - name: Install deps
+      run: caps --ci && yarn install --immutable
 
-    - name: "compiles to js"
+    - name: Validate canonical snapshot
+      run: |
+        calcit calcit.cirru edit format
+        git diff --exit-code -- calcit.cirru
+        calcit calcit.cirru --check-only
+
+    - name: compile and build
       run: >
-        cr --emit-js --once
-        && cp assets/* js-out/
-        && yarn && yarn vite build --base=./
+        calcit calcit.cirru js
+        && yarn vite build --base=./
 
     - name: Deploy to server
       id: deploy

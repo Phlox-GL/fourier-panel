@@ -1,13 +1,17 @@
 {
+  "packageManager": "yarn@4.12.0",
   "dependencies": {
-    "@calcit/procs": "^0.6.1",
+    "@calcit/procs": "^0.13.29",
     "@quamolit/phlox-utils": "^0.0.2",
     "fontfaceobserver-es": "^3.3.3",
-    "pixi.js": "^6.5.0",
+    "hsluv": "^1.0.1",
+    "mobile-detect": "^1.4.5",
+    "nanoid": "^5.0.6",
+    "pixi.js": "7.x",
     "shortid": "^2.2.16"
   },
   "devDependencies": {
-    "vite": "^3.0.2"
+    "vite": "^5.1.6"
   },
   "version": "0.4.1"
 }
