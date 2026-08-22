@@ -12,19 +12,32 @@ jobs:
     steps:
     - uses: actions/checkout@v4
 
+    - uses: actions/setup-node@v6
+      with:
+        node-version: 24
+
     - uses: calcit-lang/setup-calcit@v1
       with:
         tools: calcit,caps
 
-    - name: prepare modules
-      run: caps --ci
+    - name: Enable Corepack
+      run: |
+        corepack enable
+        corepack prepare yarn@4.12.0 --activate
+        yarn --version
+
+    - name: Install deps
+      run: caps --ci && yarn install --immutable
+
+    - name: Validate canonical snapshot
+      run: |
+        calcit calcit.cirru edit format
+        git diff --exit-code -- calcit.cirru
+        calcit calcit.cirru --check-only
 
     - name: compile and build
       run: >
         calcit calcit.cirru js
-        && corepack enable
-        && corepack prepare yarn@4.12.0 --activate
-        && yarn install --immutable
         && yarn vite build --base=./
 
     - name: Deploy to server
