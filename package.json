@@ -1,7 +1,7 @@
 {
   "packageManager": "yarn@4.12.0",
   "dependencies": {
-    "@calcit/procs": "^0.13.29",
+    "@calcit/procs": "0.14.16",
     "@quamolit/phlox-utils": "^0.0.2",
     "fontfaceobserver-es": "^3.3.3",
     "hsluv": "^1.0.1",
