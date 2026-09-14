@@ -3,8 +3,7 @@
   :about "|Machine-generated snapshot. Do not edit directly — changes will be overwritten. Use `calcit query` to inspect and `calcit edit`/`calcit tree` to modify. Run `calcit docs agents --contract` before mutations; use `--full` for first orientation or changed contract digest. Manual edits must follow format and schema conventions, then run `calcit edit format`."
   :package |app
   :entries $ {} $ :default
-    {} (:description |) (:init-fn 'app.main/main!) (:mode :native)
-      :reload-fn 'app.main/reload!
+    {} (:description |) (:init-fn 'app.main/main!) (:mode :native) (:reload-fn 'app.main/reload!)
       :feature-policy $ {}
       :modules $ [] |phlox/ |respo.calcit/ |respo-ui.calcit/
       :type-slots $ {}
@@ -16,7 +15,18 @@
             * amplitude $ sin $ + phase
               / (* 0.1 x) duration
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Fn $ {} (:return 'Number)
+            :args $ [] 'Number 'Number 'Number 'Number
+        'child-state-at-index $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ defn child-state-at-index (states idx)
+            unsafe-coerce
+              >> states $ unsafe-coerce idx 'Tag
+              :: 'Map 'Tag 'Dynamic
+          :examples $ []
+          :schema $ :: 'Fn $ {}
+            :args $ [] (:: 'Map 'Tag 'Dynamic) 'Number
+            :features $ #{} :js-ffi
+            :return $ :: 'Map 'Tag 'Dynamic
         'comp-container $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defcomp comp-container (store)
             ; println |Store store $ :tab store
@@ -29,22 +39,24 @@
                     {} (:duration 2) (:amplitude 10) (:phase 1)
                     {} (:duration 2) (:amplitude 10) (:phase 1)
                     {} (:duration 2) (:amplitude 10) (:phase 1)
+                waves $ unsafe-coerce
+                  option:unwrap-or (get state :waves) nil
+                  :: 'List $ :: 'Map 'Tag 'Number
               container ({})
                 container
                   {} $ :position $ [] 80 120
-                  , & $ ->
-                    option:unwrap-or (get state :waves) nil
-                    map-indexed $ fn (idx wave)
-                      comp-control-wave (>> states idx)
+                  , & $ -> waves $ map-indexed
+                    fn (idx wave)
+                      comp-control-wave (child-state-at-index states idx)
                         [] 0 $ * idx 200
                         , wave $ fn (new-wave d!)
                           d! cursor $ assoc-in state ([] :waves idx) new-wave
-                comp-wave-combined ([] 740 140)
-                  option:unwrap-or (get state :waves) nil
-                comp-wave-circled (>> states :circled) ([] 1000 480)
-                  option:unwrap-or (get state :waves) nil
+                comp-wave-combined ([] 740 140) waves
+                comp-wave-circled (>> states :circled) ([] 1000 480) waves
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Fn $ {} (:return 'Dynamic)
+            :args $ [] $ :: 'Map 'Tag 'Dynamic
+            :features $ #{} :js-ffi
         'comp-control-wave $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defcomp comp-control-wave (states position wave on-change)
             container
@@ -81,7 +93,10 @@
                 option:unwrap-or (get wave :duration) nil
                 option:unwrap-or (get wave :phase) nil
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Fn $ {} (:return 'Dynamic)
+            :args $ [] (:: 'Map 'Tag 'Dynamic) (:: 'List 'Number) (:: 'Map 'Tag 'Number)
+              :: 'Fn $ {} (:return 'Unit)
+                :args $ [] (:: 'Map 'Tag 'Number) 'Dynamic
         'comp-wave $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defcomp comp-wave (position amplitude duration phase)
             let
@@ -108,7 +123,8 @@
                       g :move-to $ first points
                     -> points $ map $ fn (p) ([] :line-to p)
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Fn $ {} (:return 'Dynamic)
+            :args $ [] (:: 'List 'Number) 'Number 'Number 'Number
         'comp-wave-circled $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defcomp comp-wave-circled (states position waves)
             let
@@ -151,7 +167,9 @@
                       g :move-to $ first points
                     -> points $ map $ fn (p) (g :line-to p)
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Fn $ {} (:return 'Dynamic)
+            :args $ [] (:: 'Map 'Tag 'Dynamic) (:: 'List 'Number)
+              :: 'List $ :: 'Map 'Tag 'Number
         'comp-wave-combined $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defcomp comp-wave-combined (position waves)
             let
@@ -185,7 +203,9 @@
                       g :move-to $ first points
                     -> points $ map $ fn (p) (g :line-to p)
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Fn $ {} (:return 'Dynamic)
+            :args $ [] (:: 'List 'Number)
+              :: 'List $ :: 'Map 'Tag 'Number
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns app.comp.container
           :require
@@ -199,8 +219,7 @@
             cond
                 exists? js/window
                 , false
-              (exists? js/process)
-                = |true js/process.env.cdn
+              (exists? js/process) (= |true js/process.env.cdn)
               :else false
           :examples $ []
           :schema $ :: 'Dynamic
@@ -210,13 +229,7 @@
           :schema $ :: 'Dynamic
         'site $ %{} 'CodeEntry (:doc |)
           :code $ quote $ def site
-            {}
-              :dev-ui |http://localhost:8100/main.css
-              :release-ui |http://cdn.tiye.me/favored-fonts/main.css
-              :cdn-url |http://cdn.tiye.me/phlox/
-              :title |Phlox
-              :icon |http://cdn.tiye.me/logo/quamolit.png
-              :storage-key |phlox
+            {} (:dev-ui |http://localhost:8100/main.css) (:release-ui |http://cdn.tiye.me/favored-fonts/main.css) (:cdn-url |http://cdn.tiye.me/phlox/) (:title |Phlox) (:icon |http://cdn.tiye.me/logo/quamolit.png) (:storage-key |phlox)
           :examples $ []
           :schema $ :: 'Dynamic
       :ns $ %{} 'NsEntry (:doc |)
@@ -226,42 +239,54 @@
         '*store $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defatom *store schema/store
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Ref $ :: 'Map 'Tag 'Dynamic
         'dispatch! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn dispatch! (op)
             do
               when
-                and dev? $ not= (nth op 0) :states
+                and dev? $ not=
+                  unsafe-coerce
+                    option:unwrap $ nth op 0
+                    , 'Tag
+                  , :states
                 println |dispatch! op
               let
-                  op-id $ shortid/generate
-                  op-time $ js/Date.now
+                  op-id $ unsafe-coerce (shortid/generate) 'String
+                  op-time $ unsafe-coerce (js/Date.now) 'Number
                 reset! *store $ updater @*store op op-id op-time
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Fn $ {} (:return 'Unit)
+            :args $ [] 'Dynamic
+            :features $ #{} :js-ffi
         'main! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn main! () (; js/console.log PIXI)
-            ->
-              new FontFaceObserver/default "|Josefin Sans"
-              .load
-              .then $ fn (event) (render-app!)
+            -> (new FontFaceObserver/default "|Josefin Sans") (phlox.core/ffi-load-font)
+              phlox.core/ffi-then $ fn (event) (render-app!)
             add-watch *store :change $ fn (store prev) (render-app!)
             println "|App Started"
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Fn $ {} (:return 'Unit)
+            :args $ []
+            :features $ #{} :js-ffi
         'reload! $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ defn reload! () (println "|Code updated.")
-            clear-phlox-caches!
-            remove-watch *store :change
+          :code $ quote $ defn reload! () (println "|Code updated.") (clear-phlox-caches!) (remove-watch *store :change)
             add-watch *store :change $ fn (store prev) (render-app!)
-            render-app! true
+            render-app-with-options! $ {} $ :swap? true
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Fn $ {} (:return 'Unit)
+            :args $ []
         'render-app! $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ defn render-app! (& args)
-            render! (comp-container @*store) dispatch! $ either (first args) ({})
+          :code $ quote $ defn render-app! ()
+            render! (comp-container @*store) dispatch! $ {}
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Fn $ {} (:return 'Unit)
+            :args $ []
+        'render-app-with-options! $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ defn render-app-with-options! (options)
+            render! (comp-container @*store) dispatch! options
+          :examples $ []
+          :schema $ :: 'Fn $ {} (:return 'Unit)
+            :args $ [] $ :: 'Map 'Tag 'Dynamic
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns app.main
           :require ([] |pixi.js :as PIXI)
@@ -280,19 +305,21 @@
               :states $ {}
               :cursor $ []
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Map 'Tag 'Dynamic
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns app.schema
     'app.updater $ %{} 'FileEntry
       :defs $ {} $ 'updater
         %{} 'CodeEntry (:doc |)
           :code $ quote $ defn updater (store op op-id op-time)
-            tag-match op
+            match op
               (:states cursor s) (update-states store cursor s)
               (:hydrate-storage d) d
               _ $ do (println "|unknown op" op) store
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Fn $ {}
+            :args $ [] (:: 'Map 'Tag 'Dynamic) 'Dynamic 'String 'Number
+            :return $ :: 'Map 'Tag 'Dynamic
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns app.updater
           :require $ [] phlox.cursor :refer $ [] update-states
