@@ -3,7 +3,7 @@
   :about "|Machine-generated snapshot. Do not edit directly — changes will be overwritten. Use `calcit query` to inspect and `calcit edit`/`calcit tree` to modify. Run `calcit docs agents --contract` before mutations; use `--full` for first orientation or changed contract digest. Manual edits must follow format and schema conventions, then run `calcit edit format`."
   :package |app
   :entries $ {} $ :default
-    {} (:description |) (:init-fn 'app.main/main!) (:mode :native) (:reload-fn 'app.main/reload!)
+    {} (:description |) (:init-fn 'app.main/main!) (:mode :native) (:reload-fn 'app.main/reload!) (:target :browser)
       :feature-policy $ {}
       :modules $ [] |phlox/ |respo.calcit/ |respo-ui.calcit/
       :type-slots $ {}
@@ -215,14 +215,25 @@
     'app.config $ %{} 'FileEntry
       :defs $ {}
         'cdn? $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ def cdn?
+          :code $ quote $ def cdn? (detect-cdn?)
+          :examples $ []
+          :schema $ :: 'Bool
+        'detect-cdn? $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ defn detect-cdn? ()
             cond
                 exists? js/window
                 , false
-              (exists? js/process) (= |true js/process.env.cdn)
-              :else false
+              (exists? js/process)
+                let
+                    raw js/process.env.cdn
+                  if (js-present? raw)
+                    = |true $ expect-string |process.env.cdn raw
+                    , false
+              true false
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Fn $ {} (:return 'Bool)
+            :args $ []
+            :features $ #{} :js-ffi
         'dev? $ %{} 'CodeEntry (:doc |)
           :code $ quote $ def dev? true
           :examples $ []
@@ -234,6 +245,7 @@
           :schema $ :: 'Dynamic
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns app.config
+          :require $ js-ffi.contract :refer $ [] expect-string
     'app.main $ %{} 'FileEntry
       :defs $ {}
         '*store $ %{} 'CodeEntry (:doc |)
@@ -242,18 +254,17 @@
           :schema $ :: 'Ref $ :: 'Map 'Tag 'Dynamic
         'dispatch! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn dispatch! (op)
-            do
-              when
-                and dev? $ not=
-                  unsafe-coerce
-                    option:unwrap $ nth op 0
-                    , 'Tag
-                  , :states
-                println |dispatch! op
-              let
-                  op-id $ unsafe-coerce (shortid/generate) 'String
-                  op-time $ unsafe-coerce (js/Date.now) 'Number
-                reset! *store $ updater @*store op op-id op-time
+            when
+              and dev? $ not=
+                unsafe-coerce
+                  option:unwrap $ nth op 0
+                  , 'Tag
+                , :states
+              println |dispatch! op
+            let
+                op-id $ unsafe-coerce (shortid/generate) 'String
+                op-time $ unsafe-coerce (js/Date.now) 'Number
+              reset! *store $ updater @*store op op-id op-time
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'Unit)
             :args $ [] 'Dynamic
