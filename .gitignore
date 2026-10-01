@@ -10,3 +10,7 @@ dist/
 .DS_Store
 .pnp.cjs
 .pnp.loader.mjs
+
+.calcit/
+compact.cirru
+package.cirru
