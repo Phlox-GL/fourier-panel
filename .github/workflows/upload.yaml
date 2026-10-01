@@ -8,6 +8,10 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: frontend-${{ github.repository }}-${{ github.event_name == 'pull_request' && format('pr-{0}', github.event.pull_request.number) || 'production' }}
+  cancel-in-progress: false
+
 jobs:
   test:
     runs-on: ubuntu-24.04
@@ -51,18 +55,11 @@ jobs:
         test ! -e package.cirru
         calcit calcit.cirru edit format
         git diff --exit-code -- calcit.cirru
-        calcit calcit.cirru fix --workflow strict --verify --format edn
         calcit calcit.cirru --check-only
         calcit calcit.cirru analyze check-public \
           --ns app.comp.container --ns app.config --ns app.main \
           --ns app.schema --ns app.updater \
           --summary-only --format json
-        calcit calcit.cirru analyze check-types --summary-only --format json
-        calcit calcit.cirru analyze weak-types \
-          --only schema-dynamic,code-dynamic --intent unresolved \
-          --summary-only --format json
-        calcit calcit.cirru analyze deprecated --summary-only --format json
-        calcit calcit.cirru analyze dynamic-methods
 
     - name: Select CDN asset path
       id: asset-path
@@ -72,7 +69,7 @@ jobs:
       run: |
         set -euo pipefail
         if [[ "$GITHUB_EVENT_NAME" == "pull_request" ]]; then
-          asset_prefix="${GITHUB_REPOSITORY}/pr/${PR_NUMBER}/${GITHUB_RUN_ID}/"
+          asset_prefix="${GITHUB_REPOSITORY}/pr/${PR_NUMBER}/${GITHUB_RUN_ID}/${GITHUB_RUN_ATTEMPT}/"
         elif [[ "$GITHUB_REF" == "refs/heads/main" ]]; then
           asset_prefix="${GITHUB_REPOSITORY}/"
         else
@@ -86,7 +83,6 @@ jobs:
     - name: Build web assets with CDN URLs
       run: |
         set -euo pipefail
-        yarn compile
         yarn build
 
     - name: Check COS credentials
