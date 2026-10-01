@@ -13,7 +13,15 @@ generates browser JavaScript. Config strings and the development flag have
 explicit types; updater operations use an Enum contract. Existing open state
 and Phlox boundaries are not claimed fully typed.
 
-PR previews use `pr/<number>/<run-id>/` to avoid overwriting other runs.
+Use `yarn dev` to compile initially, then watch Calcit and run Vite together;
+either process exiting stops the other. `yarn build` and `yarn release` compile
+once and build. CI retains canonical formatting, strict entry/all-public checks
+and actual build; repeated migration/type-debt reports are removed. No new
+verification script or test suite is added. Fourier formulas and business source
+are unchanged.
+
+PR previews use `pr/<number>/<run-id>/<attempt>/` to avoid overwriting other runs.
+Runs are grouped by PR, with production serialized separately and no cancellation.
 Vite and COS Action v1.1.1 use the same base URL; uploaded resources are verified
 inside the action, without an extra checker. Production/server paths are unchanged.
 
