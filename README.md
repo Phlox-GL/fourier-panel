@@ -13,8 +13,8 @@ generates browser JavaScript. Config strings and the development flag have
 explicit types; updater operations use an Enum contract. Existing open state
 and Phlox boundaries are not claimed fully typed.
 
-Use `yarn dev` to compile initially, then watch Calcit and run Vite together;
-either process exiting stops the other. `yarn build` and `yarn release` compile
+Use `yarn dev` to compile initially and start Vite. For live Calcit edits, run
+`calcit calcit.cirru js -w` in another terminal. `yarn build` and `yarn release` compile
 once and build. CI retains canonical formatting, strict entry/all-public checks
 and actual build; repeated migration/type-debt reports are removed. No new
 verification script or test suite is added. Fourier formulas and business source

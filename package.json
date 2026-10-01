@@ -4,7 +4,7 @@
     "compile": "calcit calcit.cirru js",
     "build": "yarn compile && vite build",
     "release": "yarn build",
-    "dev": "yarn compile && concurrently --kill-others \"calcit calcit.cirru js -w\" \"vite\""
+    "dev": "yarn compile && vite"
   },
   "dependencies": {
     "@calcit/procs": "0.27.0",
@@ -17,7 +17,6 @@
     "shortid": "^2.2.16"
   },
   "devDependencies": {
-    "concurrently": "^10.0.5",
     "vite": "^8.3.1"
   },
   "version": "0.4.4"
