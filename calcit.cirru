@@ -5,7 +5,7 @@
   :entries $ {} $ :default
     {} (:description |) (:init-fn 'app.main/main!) (:mode :js) (:reload-fn 'app.main/reload!) (:target :browser)
       :feature-policy $ {}
-      :modules $ [] |phlox/ |respo.calcit/ |respo-ui.calcit/
+      :modules $ [] |phlox/
       :type-slots $ {}
   :files $ {}
     'app.comp.container $ %{} 'FileEntry
@@ -17,29 +17,40 @@
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'Number)
             :args $ [] 'Number 'Number 'Number 'Number
+          :tests $ [] $ %{} 'TestEntry (:name |preserves-quarter-cycle-amplitude)
+            :code $ quote $ assert= 10
+              calc-wave-height 0 10 2 $ * 0.5 &PI
         'child-state-at-index $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn child-state-at-index (states idx)
-            unsafe-coerce
-              >> states $ unsafe-coerce idx 'Tag
-              :: 'Map 'Tag 'Dynamic
+            decode-map-as (>> states idx) (:: 'Map 'Tag 'Dynamic)
           :examples $ []
           :schema $ :: 'Fn $ {}
-            :args $ [] (:: 'Map 'Tag 'Dynamic) 'Number
-            :features $ #{} :js-ffi
+            :args $ [] (:: 'Map 'Dynamic 'Dynamic) 'Number
             :return $ :: 'Map 'Tag 'Dynamic
+          :tests $ [] $ %{} 'TestEntry (:name |preserves-numeric-cursor)
+            :code $ quote $ assert= ([] 2)
+              .unwrap $ get
+                child-state-at-index
+                  {} $ :cursor $ []
+                  , 2
+                , :cursor
         'comp-container $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defcomp comp-container (store)
             ; println |Store store $ :tab store
             let
                 cursor $ []
-                states $ option:unwrap-or (get store :states) nil
-                state $ either
-                  option:unwrap-or (get states :data) nil
-                  {} $ :waves $ []
-                    {} (:duration 2) (:amplitude 10) (:phase 1)
-                    {} (:duration 2) (:amplitude 10) (:phase 1)
-                    {} (:duration 2) (:amplitude 10) (:phase 1)
-                waves $ unsafe-coerce
+                states $ decode-map-as
+                  option:unwrap-or (get store :states) nil
+                  :: 'Map 'Dynamic 'Dynamic
+                state $ decode-map-as
+                  either
+                    option:unwrap-or (get states :data) nil
+                    {} $ :waves $ []
+                      {} (:duration 2) (:amplitude 10) (:phase 1)
+                      {} (:duration 2) (:amplitude 10) (:phase 1)
+                      {} (:duration 2) (:amplitude 10) (:phase 1)
+                  :: 'Map 'Tag 'Dynamic
+                waves $ decode-map-as
                   option:unwrap-or (get state :waves) nil
                   :: 'List $ :: 'Map 'Tag 'Number
               container ({})
@@ -50,11 +61,15 @@
                       comp-control-wave (child-state-at-index states idx)
                         [] 0 $ * idx 200
                         , wave $ fn (new-wave d!)
-                          d! cursor $ assoc-in state ([] :waves idx) new-wave
+                          d! $ :: :states cursor $ assoc-in state ([] :waves idx) new-wave
+                          , &unit
                 comp-wave-combined ([] 740 140) waves
-                comp-wave-circled (>> states :circled) ([] 1000 480) waves
+                comp-wave-circled
+                  decode-map-as (>> states :circled) (:: 'Map 'Tag 'Dynamic)
+                  [] 1000 480
+                  , waves
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'Dynamic)
+          :schema $ :: 'Fn $ {} (:return 'phlox.schema/PhloxElement)
             :args $ [] $ :: 'Map 'Tag 'Dynamic
             :features $ #{} :js-ffi
         'comp-control-wave $ %{} 'CodeEntry (:doc |)
@@ -65,35 +80,41 @@
                 {}
                   :position $ [] 0 40
                   :title |Amplitude
-                  :value $ option:unwrap-or (get wave :amplitude) nil
+                  :value $ .unwrap $ get wave :amplitude
                   :unit 0.1
                   :min 0
                   :on-change $ fn (v d!)
-                    on-change (assoc wave :amplitude v) d!
+                    on-change
+                      assoc wave :amplitude $ decode-map-as v 'Number
+                      , d!
               comp-slider (>> states :duration)
                 {}
                   :position $ [] 160 40
                   :title |Duration
-                  :value $ option:unwrap-or (get wave :duration) nil
+                  :value $ .unwrap $ get wave :duration
                   :unit 0.01
                   :min 0.01
                   :on-change $ fn (v d!)
-                    on-change (assoc wave :duration v) d!
+                    on-change
+                      assoc wave :duration $ decode-map-as v 'Number
+                      , d!
               comp-slider (>> states :phase)
                 {}
                   :position $ [] 320 40
                   :title |Phase
-                  :value $ option:unwrap-or (get wave :phase) nil
+                  :value $ .unwrap $ get wave :phase
                   :unit 0.01
                   :min 0
                   :on-change $ fn (v d!)
-                    on-change (assoc wave :phase v) d!
+                    on-change
+                      assoc wave :phase $ decode-map-as v 'Number
+                      , d!
               comp-wave ([])
-                option:unwrap-or (get wave :amplitude) nil
-                option:unwrap-or (get wave :duration) nil
-                option:unwrap-or (get wave :phase) nil
+                .unwrap $ get wave :amplitude
+                .unwrap $ get wave :duration
+                .unwrap $ get wave :phase
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'Dynamic)
+          :schema $ :: 'Fn $ {} (:return 'phlox.schema/PhloxElement)
             :args $ [] (:: 'Map 'Tag 'Dynamic) (:: 'List 'Number) (:: 'Map 'Tag 'Number)
               :: 'Fn $ {} (:return 'Unit)
                 :args $ [] (:: 'Map 'Tag 'Number) 'Dynamic
@@ -120,29 +141,33 @@
                         :color $ hslx 0 0 100
                         :width 1
                         :alpha 1
-                      g :move-to $ first points
+                      g :move-to $ .unwrap $ first points
                     -> points $ map $ fn (p) ([] :line-to p)
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'Dynamic)
+          :schema $ :: 'Fn $ {} (:return 'phlox.schema/PhloxElement)
             :args $ [] (:: 'List 'Number) 'Number 'Number 'Number
         'comp-wave-circled $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defcomp comp-wave-circled (states position waves)
             let
-                cursor $ option:unwrap-or (get states :cursor) nil
-                state $ either
-                  option:unwrap-or (get states :data) nil
-                  {} $ :factor 1
+                cursor $ decode-map-as
+                  .unwrap $ get states :cursor
+                  :: 'List 'Dynamic
+                state $ decode-map-as
+                  either
+                    option:unwrap-or (get states :data) nil
+                    {} $ :factor 1
+                  :: 'Map 'Tag 'Number
                 points $ -> (range 200)
                   map $ fn (x)
                     let
                         h $ -> waves
                           map $ fn (wave)
                             calc-wave-height x
-                              option:unwrap-or (get wave :amplitude) nil
-                              option:unwrap-or (get wave :duration) nil
-                              option:unwrap-or (get wave :phase) nil
+                              .unwrap $ get wave :amplitude
+                              .unwrap $ get wave :duration
+                              .unwrap $ get wave :phase
                           reduce 0 &+
-                        angle $ * x 0.1 $ option:unwrap-or (get state :factor) nil
+                        angle $ * x 0.1 $ .unwrap (get state :factor)
                       []
                         * h $ cos angle
                         * h $ sin angle
@@ -152,11 +177,11 @@
                   {}
                     :position $ [] 160 40
                     :title |Factor
-                    :value $ option:unwrap-or (get state :factor) nil
+                    :value $ .unwrap $ get state :factor
                     :unit 0.01
                     :min 0.01
                     :on-change $ fn (v d!)
-                      d! cursor $ assoc state :factor v
+                      d! $ :: :states cursor $ assoc state :factor (decode-map-as v 'Number)
                 graphics $ {} $ :ops
                   concat
                     []
@@ -164,10 +189,10 @@
                         :color $ hslx 0 0 100
                         :width 1
                         :alpha 1
-                      g :move-to $ first points
+                      g :move-to $ .unwrap $ first points
                     -> points $ map $ fn (p) (g :line-to p)
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'Dynamic)
+          :schema $ :: 'Fn $ {} (:return 'phlox.schema/PhloxElement)
             :args $ [] (:: 'Map 'Tag 'Dynamic) (:: 'List 'Number)
               :: 'List $ :: 'Map 'Tag 'Number
         'comp-wave-combined $ %{} 'CodeEntry (:doc |)
@@ -179,9 +204,9 @@
                       -> waves
                         map $ fn (wave)
                           calc-wave-height x
-                            option:unwrap-or (get wave :amplitude) nil
-                            option:unwrap-or (get wave :duration) nil
-                            option:unwrap-or (get wave :phase) nil
+                            .unwrap $ get wave :amplitude
+                            .unwrap $ get wave :duration
+                            .unwrap $ get wave :phase
                         reduce 0 &+
               container
                 {} $ :position position
@@ -200,17 +225,16 @@
                         :color $ hslx 0 0 100
                         :width 1
                         :alpha 1
-                      g :move-to $ first points
+                      g :move-to $ .unwrap $ first points
                     -> points $ map $ fn (p) (g :line-to p)
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'Dynamic)
+          :schema $ :: 'Fn $ {} (:return 'phlox.schema/PhloxElement)
             :args $ [] (:: 'List 'Number)
               :: 'List $ :: 'Map 'Tag 'Number
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns app.comp.container
           :require
             phlox.core :refer $ defcomp g hslx rect circle text container graphics create-list >>
-            respo-ui.core :as ui
             phlox.comp.slider :refer $ comp-slider
     'app.config $ %{} 'FileEntry
       :defs $ {}
@@ -245,7 +269,7 @@
           :schema $ :: 'Map 'Tag 'String
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns app.config
-          :require $ js-ffi.contract :refer $ [] expect-string
+          :require $ js-ffi.contract :refer $ expect-string
     'app.main $ %{} 'FileEntry
       :defs $ {}
         '*store $ %{} 'CodeEntry (:doc |)
@@ -254,34 +278,29 @@
           :schema $ :: 'Ref $ :: 'Map 'Tag 'Dynamic
         'dispatch! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn dispatch! (op)
-            when
-              and dev? $ not=
-                unsafe-coerce
-                  option:unwrap $ nth op 0
-                  , 'Tag
-                , :states
-              println |dispatch! op
+            when dev? $ println |dispatch! op
             let
-                op-id $ unsafe-coerce (shortid/generate) 'String
-                op-time $ unsafe-coerce (js/Date.now) 'Number
+                op-id $ decode-map-as (shortid/generate) 'String
+                op-time $ decode-map-as (js/Date.now) 'Number
               reset! *store $ updater @*store op op-id op-time
+            , &unit
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'Unit)
-            :args $ [] 'Dynamic
+            :args $ [] 'Enum
             :features $ #{} :js-ffi
         'main! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn main! () (; js/console.log PIXI)
             -> (new FontFaceObserver/default "|Josefin Sans") (phlox.core/ffi-load-font)
               phlox.core/ffi-then $ fn (event) (render-app!)
-            add-watch *store :change $ fn (store prev) (render-app!)
+            add-watch! *store :change $ fn (store prev) (render-app!)
             println "|App Started"
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'Unit)
             :args $ []
             :features $ #{} :js-ffi
         'reload! $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ defn reload! () (println "|Code updated.") (clear-phlox-caches!) (remove-watch *store :change)
-            add-watch *store :change $ fn (store prev) (render-app!)
+          :code $ quote $ defn reload! () (println "|Code updated.") (clear-phlox-caches!) (remove-watch! *store :change)
+            add-watch! *store :change $ fn (store prev) (render-app!)
             render-app-with-options! $ {} $ :swap? true
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'Unit)
@@ -300,14 +319,14 @@
             :args $ [] $ :: 'Map 'Tag 'Dynamic
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns app.main
-          :require ([] |pixi.js :as PIXI)
-            [] phlox.core :refer $ [] render! clear-phlox-caches!
-            [] app.comp.container :refer $ [] comp-container
-            [] app.schema :as schema
-            [] app.config :refer $ [] dev?
-            [] |shortid :as shortid
-            [] app.updater :refer $ [] updater
-            [] |fontfaceobserver-es :as FontFaceObserver
+          :require (|pixi.js :as PIXI)
+            phlox.core :refer $ render! clear-phlox-caches!
+            app.comp.container :refer $ comp-container
+            app.schema :as schema
+            app.config :refer $ dev?
+            |shortid :as shortid
+            app.updater :refer $ updater
+            |fontfaceobserver-es :as FontFaceObserver
     'app.schema $ %{} 'FileEntry
       :defs $ {} $ 'store
         %{} 'CodeEntry (:doc |)
@@ -324,8 +343,12 @@
         %{} 'CodeEntry (:doc |)
           :code $ quote $ defn updater (store op op-id op-time)
             match op
-              (:states cursor s) (update-states store cursor s)
-              (:hydrate-storage d) d
+              (:states cursor s)
+                update-states store
+                  decode-map-as cursor $ :: 'List 'Dynamic
+                  , s
+              (:hydrate-storage d)
+                decode-map-as d $ :: 'Map 'Tag 'Dynamic
               _ $ do (println "|unknown op" op) store
           :examples $ []
           :schema $ :: 'Fn $ {}
@@ -333,4 +356,4 @@
             :return $ :: 'Map 'Tag 'Dynamic
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns app.updater
-          :require $ [] phlox.cursor :refer $ [] update-states
+          :require $ phlox.cursor :refer $ update-states
