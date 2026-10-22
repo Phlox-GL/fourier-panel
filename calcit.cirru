@@ -40,18 +40,18 @@
             let
                 cursor $ []
                 states $ decode-map-as
-                  option:unwrap-or (get store :states) nil
+                  .unwrap-or (get store :states) nil
                   :: 'Map 'Dynamic 'Dynamic
                 state $ decode-map-as
                   either
-                    option:unwrap-or (get states :data) nil
+                    .unwrap-or (get states :data) nil
                     {} $ :waves $ []
                       {} (:duration 2) (:amplitude 10) (:phase 1)
                       {} (:duration 2) (:amplitude 10) (:phase 1)
                       {} (:duration 2) (:amplitude 10) (:phase 1)
                   :: 'Map 'Tag 'Dynamic
                 waves $ decode-map-as
-                  option:unwrap-or (get state :waves) nil
+                  .unwrap-or (get state :waves) nil
                   :: 'List $ :: 'Map 'Tag 'Number
               container ({})
                 container
@@ -154,7 +154,7 @@
                   :: 'List 'Dynamic
                 state $ decode-map-as
                   either
-                    option:unwrap-or (get states :data) nil
+                    .unwrap-or (get states :data) nil
                     {} $ :factor 1
                   :: 'Map 'Tag 'Number
                 points $ -> (range 200)
