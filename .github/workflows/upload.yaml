@@ -55,9 +55,9 @@ jobs:
         test ! -e compact.cirru
         test ! -e package.cirru
         calcit calcit.cirru edit format
-        git diff --exit-code -- calcit.cirru
+        git diff --quiet --exit-code -- calcit.cirru
         calcit calcit.cirru --check-only --all-defs
-        calcit calcit.cirru fix --workflow strict --verify
+        calcit calcit.cirru fix --workflow strict --verify --format json | jq -e '.data.workflow.status == "passed" and .diagnostics == []'
         calcit calcit.cirru test --require-match
         calcit calcit.cirru --check-only \
           --ns app.comp.container --ns app.config --ns app.main \
@@ -87,6 +87,15 @@ jobs:
       run: |
         set -euo pipefail
         yarn build
+
+    - name: Preserve PR frontend for acceptance
+      if: github.event_name == 'pull_request'
+      uses: actions/upload-artifact@v7.0.0
+      with:
+        name: fourier-panel-pr-frontend
+        path: dist
+        if-no-files-found: error
+        retention-days: 3
 
     - name: Check COS credentials
       id: cos-credentials

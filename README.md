@@ -33,11 +33,17 @@ IAB 原入口已实际拖拽第一组 Amplitude/Duration/Phase 并观察曲线�
 一致，尚未证明根因；原布局的小视口可用性和原生组合键平移未完整验收。
 该段是历史候选验收，不替代本轮正式图的实际验收。
 
-本轮配对正式 Calcit/procs 0.30.1、Phlox 0.7.16 和 JS FFI 0.2.5，
+历史 #13 配对正式 Calcit/procs 0.30.1、Phlox 0.7.16 和 JS FFI 0.2.5，
 四处内部 `option:unwrap-or` 改为公开 `.unwrap-or`，nil/default 和状态解码不变。
 原数学、数字控件游标、混合 key、布局/相机与两条附着回归不变；不增加强转。
 未执行本地 Caps，也不以 alpha CLI 编译正式依赖图；以本 PR 正式 Linux CI
 和真实原布局浏览器结果作为当前证据。Actions 使用精确正式 tag，接受 tag 可移动风险。
+
+当前依赖同步正式 Phlox 0.7.18 / JS FFI 0.2.6，CLI/procs 保持精确0.30.1。
+需重新安装完整模块图并生成JS，不混用旧缓存。应用源码、两条附着回归、公式、
+数字/混合状态key、相机、原布局和HUD均未修改；只更新依赖及原CI的quiet canonical、
+strict状态确认和PR产物保留，不新增checker、质量预算或框架。
+Phlox #71 的IAB静态标签可见性风险仍保留，不声称本轮解决。
 
 PR previews use `pr/<number>/<run-id>/<attempt>/` to avoid overwriting other runs.
 Runs are grouped by PR, with production serialized separately and no cancellation.
