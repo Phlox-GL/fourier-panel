@@ -166,7 +166,7 @@
                               .unwrap $ get wave :amplitude
                               .unwrap $ get wave :duration
                               .unwrap $ get wave :phase
-                          reduce 0 &+
+                          .foldl 0 &+
                         angle $ * x 0.1 $ .unwrap (get state :factor)
                       []
                         * h $ cos angle
@@ -207,7 +207,7 @@
                             .unwrap $ get wave :amplitude
                             .unwrap $ get wave :duration
                             .unwrap $ get wave :phase
-                        reduce 0 &+
+                        .foldl 0 &+
               container
                 {} $ :position position
                 graphics $ {} $ :ops
