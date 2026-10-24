@@ -40,8 +40,9 @@ IAB 原入口已实际拖拽第一组 Amplitude/Duration/Phase 并观察曲线�
 和真实原布局浏览器结果作为当前证据。Actions 使用精确正式 tag，接受 tag 可移动风险。
 
 当前依赖同步正式 Phlox 0.7.18 / JS FFI 0.2.6，CLI/procs 保持精确0.30.1。
-需重新安装完整模块图并生成JS，不混用旧缓存。应用源码、两条附着回归、公式、
-数字/混合状态key、相机、原布局和HUD均未修改；只更新依赖及原CI的quiet canonical、
+需重新安装完整模块图并生成JS，不混用旧缓存。源码仅两处数字列表归约由 `reduce`
+改为公开 `.foldl`，保留初值0与加法函数。两条附着回归、公式参数、数字/混合状态key、
+相机、原布局和HUD均未修改；同步依赖及原CI的quiet canonical、
 strict状态确认和PR产物保留，不新增checker、质量预算或框架。
 Phlox #71 的IAB静态标签可见性风险仍保留，不声称本轮解决。
 
