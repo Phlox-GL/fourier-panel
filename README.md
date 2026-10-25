@@ -13,6 +13,10 @@ generates browser JavaScript. Config strings and the development flag have
 explicit types; updater operations use an Enum contract. Existing open state
 and Phlox boundaries are not claimed fully typed.
 
+错误诊断文件 `.calcit-error.cirru` 是本地产物，不随项目分发；旧仓库中的
+历史错误栈已移除，现有 `.gitignore` 继续忽略它。本次清理不改应用源码、
+HUD、依赖、公式、原测试或部署配置，也不代表修复了新的运行时错误。
+
 Use `yarn dev` to compile initially and start Vite. For live Calcit edits, run
 `calcit calcit.cirru -w` in another terminal. `yarn build` and `yarn release` compile
 once and build. CI retains canonical formatting, strict entry/all-public checks
