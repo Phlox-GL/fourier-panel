@@ -61,6 +61,8 @@ Demo https://r.tiye.me/Quamolit/fourier-panel/
 
 Workflow https://github.com/Quamolit/phlox-workflow.calcit
 
+后续源码清理仅把 `app.main/*store` 的 `defatom` 改为首选 `defref`，名称、初值、类型、watcher、Fourier 公式和 HUD 均不变。官方 Linux 0.30.1 的原两项回归、完整 strict、公开定义检查及构建通过，改写前后 60 个生成 JS 文件的哈希一致；这不替代实际浏览器热重载/交互验收。依赖、工作流与部署路径不改，不增加永久测试或校验脚本。
+
 ### License
 
 MIT
