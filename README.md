@@ -7,6 +7,22 @@ Fourier Panel
 
 ...Not a meaningful tool, just get those interactive shapes.
 
+### 本轮 0.31.0 升级
+
+使用者注意：CLI/procs 精确配对正式 0.31.0，Phlox 使用已发布 0.8.0-alpha.3，
+JS FFI 为 0.2.7；需重新安装依赖并构建。本轮修复字体默认导入导致的启动白屏：
+将 namespace 的 `/default` 访问改为官方 `:default` 导入，仍等待字体后渲染，
+watch 注册顺序、回调参数、公式、HUD 和原类型门禁不变。对应上游 Calcit #2453。
+
+174 个定义、19 个原公开定义、完整 strict、原两项回归、工具链配对和构建通过。
+实际 IAB 验证修复后启动、第一组 Amplitude/Duration/Phase 拖动及刷新恢复；
+没有新增 console 错误。后两组、Factor、HMR 与原生相机平移本轮未重验；
+小视口布局和 Phlox #71 静态标题问题仍保留，不宣称完整视觉验收。
+下面保留先前 0.30.1 迁移记录；其中“未执行本地 Caps”仅描述历史，
+本轮按用户授权使用官方本地 0.31.0 工具链和原门禁。
+
+### 历史迁移记录
+
 Uses paired formal Calcit/procs 0.30.1 with canonical `calcit.cirru` and `deps.cirru`;
 CI rejects retired `compact.cirru` and `package.cirru`. The default entry
 generates browser JavaScript. Config strings and the development flag have
