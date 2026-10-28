@@ -290,7 +290,7 @@
             :features $ #{} :js-ffi
         'main! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn main! () (; js/console.log PIXI)
-            -> (new FontFaceObserver/default "|Josefin Sans") (phlox.core/ffi-load-font)
+            -> (new FontFaceObserver "|Josefin Sans") (phlox.core/ffi-load-font)
               phlox.core/ffi-then $ fn (event) (render-app!)
             add-watch! *store :change $ fn (store prev) (render-app!)
             println "|App Started"
@@ -326,7 +326,7 @@
             app.config :refer $ dev?
             |shortid :as shortid
             app.updater :refer $ updater
-            |fontfaceobserver-es :as FontFaceObserver
+            |fontfaceobserver-es :default FontFaceObserver
     'app.schema $ %{} 'FileEntry
       :defs $ {} $ 'store
         %{} 'CodeEntry (:doc |)
