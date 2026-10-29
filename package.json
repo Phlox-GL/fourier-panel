@@ -7,7 +7,7 @@
     "dev": "yarn compile && vite"
   },
   "dependencies": {
-    "@calcit/procs": "0.31.0",
+    "@calcit/procs": "0.32.1",
     "@quamolit/phlox-utils": "^0.0.2",
     "fontfaceobserver-es": "^3.3.3",
     "hsluv": "^1.0.1",
