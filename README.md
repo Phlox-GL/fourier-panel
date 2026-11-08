@@ -7,23 +7,16 @@ Fourier Panel
 
 ...Not a meaningful tool, just get those interactive shapes.
 
-### 0.32.1 升级对使用者的影响
+### 0.38.0 升级对使用者的影响
 
-CLI 与 `@calcit/procs` 配对正式 `0.32.1`，Phlox 使用正式 `0.8.0`，
-JS-FFI 使用 `0.2.9`，传递 Touch Control `0.0.35` 和 Pointed Prompt `0.0.24`。
-请重新安装完整模块图并生成 JS。本项目类型表达式已兼容新语法；官方 formatter
-仅规范化 Snapshot 存储，19 个定义的代码、schema、原测试和 examples 均不变。
-不改变 Fourier 公式、数字/混合状态 key、字体、相机、原布局或 HUD。
+请使用配套的正式 Calcit 和 `@calcit/procs` 0.38.0，重新安装依赖并构建。
+Phlox 更新到 0.9.3，JS-FFI 更新到 0.2.13。波形公式、初始值、数字游标及相机交互沿用原行为。
 
-正式 tags 的 Caps strict/toolchain 安装、175 个全定义、19 个原公开定义、
-完整 strict（diagnostics 为空）、原两项回归、不可变安装和构建通过。
-实际原布局第一组 Amplitude 10→13、Duration 2→2.25、Phase 1→1.25 与波形联动，
-刷新恢复 10/2/1，无 console warning/error。后两组、Factor、HMR、原生相机平移
-及真实移动设备未重验，保留小视口布局及 Phlox #71 的既有风险。
+振幅、周期与相位用具名 `Wave` 表达。普通波形面板和环形 Factor 用 union 区分，
+滑块直接派发对应的具名操作。旧状态 Map 在读取时解码，缺失时仍使用原默认值。
+Phlox 组件的混合游标和状态继续走原事件入口。
 
-Yarn 包年龄设为一小时，不加版本豁免；artifact action 仅更新已核实的正式 patch tag。
-不新增验证脚本或测试框架，原类型门禁、COS action 内置 verify、PR 独立前缀
-和生产/服务器路径不变。PR 只沿用隔离前端预览，本轮不合并或生产部署。
+CI 沿用完整 strict、原两项回归和隔离 COS 预览，上传使用 Action 内置 verify。
 
 ### 历史 0.31.0 升级
 
