@@ -21,10 +21,10 @@
               calc-wave-height 0 10 2 $ * 0.5 &PI
         'child-state-at-index $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn child-state-at-index (states idx)
-            decode-map-as (>> states idx) (:: 'Map 'Tag 'Dynamic)
+            decode-map-as (>> states idx) (Map Tag Dynamic)
           :examples $ []
           :schema $ quote $ Fn (Map Dynamic Dynamic) Number
-            -> $ Map Tag Dynamic
+            -> $ Map Dynamic Dynamic
           :tests $ [] $ %{} 'TestEntry (:name |preserves-numeric-cursor)
             :code $ quote $ assert= ([] 2)
               .unwrap $ get
@@ -37,20 +37,15 @@
             ; println |Store store $ :tab store
             let
                 cursor $ []
-                states $ decode-map-as
-                  .unwrap-or (get store :states) nil
-                  :: 'Map 'Dynamic 'Dynamic
-                state $ decode-map-as
-                  either
-                    .unwrap-or (get states :data) nil
-                    {} $ :waves $ []
-                      {} (:duration 2) (:amplitude 10) (:phase 1)
-                      {} (:duration 2) (:amplitude 10) (:phase 1)
-                      {} (:duration 2) (:amplitude 10) (:phase 1)
-                  :: 'Map 'Tag 'Dynamic
-                waves $ decode-map-as
-                  .unwrap-or (get state :waves) nil
-                  :: 'List $ :: 'Map 'Tag 'Number
+                states $ :states store
+                state $ match (get states :data)
+                  (:some raw)
+                    if (nil? raw)
+                      app.schema/PanelState :waves $ [] (app.schema/Wave :duration 2 :amplitude 10 :phase 1) (app.schema/Wave :duration 2 :amplitude 10 :phase 1) (app.schema/Wave :duration 2 :amplitude 10 :phase 1)
+                      decode-map-as raw app.schema/PanelState
+                  (:none)
+                    app.schema/PanelState :waves $ [] (app.schema/Wave :duration 2 :amplitude 10 :phase 1) (app.schema/Wave :duration 2 :amplitude 10 :phase 1) (app.schema/Wave :duration 2 :amplitude 10 :phase 1)
+                waves $ :waves state
               container ({})
                 container
                   {} $ :position $ [] 80 120
@@ -59,15 +54,15 @@
                       comp-control-wave (child-state-at-index states idx)
                         [] 0 $ * idx 200
                         , wave $ fn (new-wave d!)
-                          d! $ :: :states cursor $ assoc-in state ([] :waves idx) new-wave
+                          hint-fn $ Fn app.schema/Wave
+                            Fn app.schema/Op $ -> Unit
+                            -> Unit
+                          d! $ app.schema/Op :control-state cursor $ assoc state :waves (&list:assoc waves idx new-wave)
                           , &unit
                 comp-wave-combined ([] 740 140) waves
-                comp-wave-circled
-                  decode-map-as (>> states :circled) (:: 'Map 'Tag 'Dynamic)
-                  [] 1000 480
-                  , waves
+                comp-wave-circled (>> states :circled) ([] 1000 480) waves
           :examples $ []
-          :schema $ quote $ Fn (Map Tag Dynamic) (-> phlox.schema/PhloxElement) (:features :js-ffi)
+          :schema $ quote $ Fn app.schema/Store (-> phlox.schema/PhloxElement) (:features :js-ffi)
         'comp-control-wave $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defcomp comp-control-wave (states position wave on-change)
             container
@@ -76,42 +71,44 @@
                 {}
                   :position $ [] 0 40
                   :title |Amplitude
-                  :value $ .unwrap $ get wave :amplitude
+                  :value $ :amplitude wave
                   :unit 0.1
                   :min 0
                   :on-change $ fn (v d!)
-                    on-change
-                      assoc wave :amplitude $ decode-map-as v 'Number
-                      , d!
+                    hint-fn $ Fn Number
+                      Fn app.schema/Op $ -> Unit
+                      -> Unit
+                    on-change (assoc wave :amplitude v) d!
               comp-slider (>> states :duration)
                 {}
                   :position $ [] 160 40
                   :title |Duration
-                  :value $ .unwrap $ get wave :duration
+                  :value $ :duration wave
                   :unit 0.01
                   :min 0.01
                   :on-change $ fn (v d!)
-                    on-change
-                      assoc wave :duration $ decode-map-as v 'Number
-                      , d!
+                    hint-fn $ Fn Number
+                      Fn app.schema/Op $ -> Unit
+                      -> Unit
+                    on-change (assoc wave :duration v) d!
               comp-slider (>> states :phase)
                 {}
                   :position $ [] 320 40
                   :title |Phase
-                  :value $ .unwrap $ get wave :phase
+                  :value $ :phase wave
                   :unit 0.01
                   :min 0
                   :on-change $ fn (v d!)
-                    on-change
-                      assoc wave :phase $ decode-map-as v 'Number
-                      , d!
-              comp-wave ([])
-                .unwrap $ get wave :amplitude
-                .unwrap $ get wave :duration
-                .unwrap $ get wave :phase
+                    hint-fn $ Fn Number
+                      Fn app.schema/Op $ -> Unit
+                      -> Unit
+                    on-change (assoc wave :phase v) d!
+              comp-wave ([]) (:amplitude wave) (:duration wave) (:phase wave)
           :examples $ []
-          :schema $ quote $ Fn (Map Tag Dynamic) (List Number) (Map Tag Number)
-            Fn (Map Tag Number) Dynamic $ -> Unit
+          :schema $ quote $ Fn (Map Dynamic Dynamic) (List Number) app.schema/Wave
+            Fn app.schema/Wave
+              Fn app.schema/Op $ -> Unit
+              -> Unit
             -> phlox.schema/PhloxElement
         'comp-wave $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defcomp comp-wave (position amplitude duration phase)
@@ -145,23 +142,19 @@
             let
                 cursor $ decode-map-as
                   .unwrap $ get states :cursor
-                  :: 'List 'Dynamic
-                state $ decode-map-as
-                  either
-                    .unwrap-or (get states :data) nil
-                    {} $ :factor 1
-                  :: 'Map 'Tag 'Number
+                  List Dynamic
+                state $ match (get states :data)
+                  (:some raw)
+                    if (nil? raw) (app.schema/FactorState :factor 1) (decode-map-as raw app.schema/FactorState)
+                  (:none) (app.schema/FactorState :factor 1)
                 points $ -> (range 200)
                   map $ fn (x)
                     let
                         h $ -> waves
                           map $ fn (wave)
-                            calc-wave-height x
-                              .unwrap $ get wave :amplitude
-                              .unwrap $ get wave :duration
-                              .unwrap $ get wave :phase
+                            calc-wave-height x (:amplitude wave) (:duration wave) (:phase wave)
                           .foldl 0 &+
-                        angle $ * x 0.1 $ .unwrap (get state :factor)
+                        angle $ * x 0.1 $ :factor state
                       []
                         * h $ cos angle
                         * h $ sin angle
@@ -171,11 +164,14 @@
                   {}
                     :position $ [] 160 40
                     :title |Factor
-                    :value $ .unwrap $ get state :factor
+                    :value $ :factor state
                     :unit 0.01
                     :min 0.01
                     :on-change $ fn (v d!)
-                      d! $ :: :states cursor $ assoc state :factor (decode-map-as v 'Number)
+                      hint-fn $ Fn Number
+                        Fn app.schema/Op $ -> Unit
+                        -> Unit
+                      d! $ app.schema/Op :control-state cursor $ assoc state :factor v
                 graphics $ {} $ :ops
                   concat
                     []
@@ -186,9 +182,7 @@
                       g :move-to $ .unwrap $ first points
                     -> points $ map $ fn (p) (g :line-to p)
           :examples $ []
-          :schema $ quote $ Fn (Map Tag Dynamic) (List Number)
-            List $ Map Tag Number
-            -> phlox.schema/PhloxElement
+          :schema $ quote $ Fn (Map Dynamic Dynamic) (List Number) (List app.schema/Wave) (-> phlox.schema/PhloxElement)
         'comp-wave-combined $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defcomp comp-wave-combined (position waves)
             let
@@ -197,10 +191,7 @@
                     [] (* x 3)
                       -> waves
                         map $ fn (wave)
-                          calc-wave-height x
-                            .unwrap $ get wave :amplitude
-                            .unwrap $ get wave :duration
-                            .unwrap $ get wave :phase
+                          calc-wave-height x (:amplitude wave) (:duration wave) (:phase wave)
                         .foldl 0 &+
               container
                 {} $ :position position
@@ -222,9 +213,7 @@
                       g :move-to $ .unwrap $ first points
                     -> points $ map $ fn (p) (g :line-to p)
           :examples $ []
-          :schema $ quote $ Fn (List Number)
-            List $ Map Tag Number
-            -> phlox.schema/PhloxElement
+          :schema $ quote $ Fn (List Number) (List app.schema/Wave) (-> phlox.schema/PhloxElement)
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns app.comp.container
           :require
@@ -267,17 +256,19 @@
         '*store $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defref *store schema/store
           :examples $ []
-          :schema $ quote $ Ref (Map Tag Dynamic)
+          :schema $ quote $ Ref app.schema/Store
         'dispatch! $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ defn dispatch! (op)
-            when dev? $ println |dispatch! op
-            let
-                op-id $ decode-map-as (shortid/generate) 'String
-                op-time $ decode-map-as (js/Date.now) 'Number
-              reset! *store $ updater @*store op op-id op-time
+          :code $ quote $ defn dispatch! (event)
+            when dev? $ println |dispatch! event
+            match (schema/decode-op event)
+              (:some op)
+                reset! *store $ updater @*store op
+                  decode-map-as (shortid/generate) String
+                  decode-map-as (js/Date.now) Number
+              (:none) (println "|unknown op" event)
             , &unit
           :examples $ []
-          :schema $ quote $ Fn Enum (-> Unit) (:features :js-ffi)
+          :schema $ quote $ Fn AnyEnum (-> Unit) (:features :js-ffi) (:open :decode)
         'main! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn main! () (; js/console.log PIXI)
             -> (new FontFaceObserver "|Josefin Sans") (phlox.core/ffi-load-font)
@@ -313,31 +304,80 @@
             app.updater :refer $ updater
             |fontfaceobserver-es :default FontFaceObserver
     'app.schema $ %{} 'FileEntry
-      :defs $ {} $ 'store
-        %{} 'CodeEntry (:doc |)
-          :code $ quote $ def store
-            {} (:tab :drafts) (:x 0) (:keyboard-on? false) (:counted 0)
-              :states $ {}
-              :cursor $ []
+      :defs $ {}
+        'ControlState $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ defunion ControlState app.schema/PanelState app.schema/FactorState
           :examples $ []
-          :schema $ quote $ Map Tag Dynamic
+          :schema $ quote UnionDef
+        'FactorState $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ defstruct FactorState (:factor Number)
+          :examples $ []
+          :schema $ quote StructDef
+        'Op $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ defenum Op
+            :control-state (List Dynamic) app.schema/ControlState
+            :states (List Dynamic) Dynamic
+            :hydrate-storage app.schema/Store
+          :examples $ []
+          :schema $ quote EnumDef
+        'PanelState $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ defstruct PanelState
+            :waves $ List app.schema/Wave
+          :examples $ []
+          :schema $ quote StructDef
+        'Store $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ defstruct Store (:tab Tag) (:x Number) (:keyboard-on? Bool) (:counted Number)
+            :states $ Map Dynamic Dynamic
+            :cursor $ List Dynamic
+          :examples $ []
+          :schema $ quote StructDef
+        'Wave $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ defstruct Wave (:amplitude Number) (:duration Number) (:phase Number)
+          :examples $ []
+          :schema $ quote StructDef
+        'decode-op $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ defn decode-op (event)
+            match event
+              (:control-state cursor data)
+                Option :some $ Op :control-state
+                  decode-map-as cursor $ List Dynamic
+                  decode-map-as data ControlState
+              (:states cursor data)
+                Option :some $ Op :states
+                  decode-map-as cursor $ List Dynamic
+                  , data
+              (:hydrate-storage data)
+                Option :some $ Op :hydrate-storage $ decode-map-as
+                  if (struct? data) (&struct:to-map data) data
+                  , Store
+              _ $ Option :none
+          :examples $ []
+          :schema $ quote $ Fn AnyEnum
+            -> $ Option app.schema/Op
+            :open :decode
+        'store $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ def store
+            Store :tab :drafts :x 0 :keyboard-on? false :counted 0 :states ({}) :cursor $ []
+          :examples $ []
+          :schema $ quote app.schema/Store
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns app.schema
     'app.updater $ %{} 'FileEntry
-      :defs $ {} $ 'updater
-        %{} 'CodeEntry (:doc |)
-          :code $ quote $ defn updater (store op op-id op-time)
+      :defs $ {}
+        'updater $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ defn updater (store op _op-id _op-time)
             match op
-              (:states cursor s)
-                update-states store
-                  decode-map-as cursor $ :: 'List 'Dynamic
-                  , s
-              (:hydrate-storage d)
-                decode-map-as d $ :: 'Map 'Tag 'Dynamic
-              _ $ do (println "|unknown op" op) store
+              (:control-state cursor data) (write-state store cursor data)
+              (:states cursor data) (write-state store cursor data)
+              (:hydrate-storage stored) stored
           :examples $ []
-          :schema $ quote $ Fn (Map Tag Dynamic) Enum String Number
-            -> $ Map Tag Dynamic
+          :schema $ quote $ Fn app.schema/Store app.schema/Op String Number (-> app.schema/Store)
+        'write-state $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ defn write-state (store cursor data)
+            assoc store :states $ decode-map-as
+              assoc-in (:states store) (conj cursor :data) data
+              Map Dynamic Dynamic
+          :examples $ []
+          :schema $ quote $ Fn app.schema/Store (List Dynamic) Dynamic (-> app.schema/Store)
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns app.updater
-          :require $ phlox.cursor :refer $ update-states
