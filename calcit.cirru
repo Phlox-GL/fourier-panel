@@ -142,7 +142,7 @@
             let
                 cursor $ decode-map-as
                   .unwrap $ get states :cursor
-                  List Dynamic
+                  List app.schema/CursorKey
                 state $ match (get states :data)
                   (:some raw)
                     if (nil? raw) (app.schema/FactorState :factor 1) (decode-map-as raw app.schema/FactorState)
@@ -309,14 +309,18 @@
           :code $ quote $ defunion ControlState app.schema/PanelState app.schema/FactorState
           :examples $ []
           :schema $ quote UnionDef
+        'CursorKey $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ defunion CursorKey Tag String Number
+          :examples $ []
+          :schema $ quote UnionDef
         'FactorState $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defstruct FactorState (:factor Number)
           :examples $ []
           :schema $ quote StructDef
         'Op $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defenum Op
-            :control-state (List Dynamic) app.schema/ControlState
-            :states (List Dynamic) Dynamic
+            :control-state (List app.schema/CursorKey) app.schema/ControlState
+            :states (List app.schema/CursorKey) Dynamic
             :hydrate-storage app.schema/Store
           :examples $ []
           :schema $ quote EnumDef
@@ -328,7 +332,7 @@
         'Store $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defstruct Store (:tab Tag) (:x Number) (:keyboard-on? Bool) (:counted Number)
             :states $ Map Dynamic Dynamic
-            :cursor $ List Dynamic
+            :cursor $ List app.schema/CursorKey
           :examples $ []
           :schema $ quote StructDef
         'Wave $ %{} 'CodeEntry (:doc |)
@@ -340,11 +344,11 @@
             match event
               (:control-state cursor data)
                 Option :some $ Op :control-state
-                  decode-map-as cursor $ List Dynamic
+                  decode-map-as cursor $ List app.schema/CursorKey
                   decode-map-as data ControlState
               (:states cursor data)
                 Option :some $ Op :states
-                  decode-map-as cursor $ List Dynamic
+                  decode-map-as cursor $ List app.schema/CursorKey
                   , data
               (:hydrate-storage data)
                 Option :some $ Op :hydrate-storage $ decode-map-as
@@ -378,6 +382,6 @@
               assoc-in (:states store) (conj cursor :data) data
               Map Dynamic Dynamic
           :examples $ []
-          :schema $ quote $ Fn app.schema/Store (List Dynamic) Dynamic (-> app.schema/Store)
+          :schema $ quote $ Fn app.schema/Store (List app.schema/CursorKey) T (-> app.schema/Store) (:generics T)
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns app.updater
