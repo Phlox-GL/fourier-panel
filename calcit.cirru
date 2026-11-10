@@ -256,16 +256,32 @@
         '*store $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defref *store schema/store
           :examples $ []
-          :schema $ quote $ Ref app.schema/Store
+          :schema $ quote $ Ref schema/Store
         'dispatch! $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ defn dispatch! (event)
+          :code $ quote $ defn dispatch! (op)
+            reset! *store $ updater @*store op
+              decode-map-as (shortid/generate) String
+              decode-map-as (js/Date.now) Number
+            , &unit
+          :examples $ []
+          :schema $ quote $ Fn schema/Op (-> Unit) (:features :js-ffi)
+        'dispatch-phlox! $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ defn dispatch-phlox! (event)
             when dev? $ println |dispatch! event
-            match (schema/decode-op event)
-              (:some op)
-                reset! *store $ updater @*store op
-                  decode-map-as (shortid/generate) String
-                  decode-map-as (js/Date.now) Number
-              (:none) (println "|unknown op" event)
+            match event
+              (:control-state cursor data)
+                dispatch! $ schema/Op :control-state
+                  decode-map-as cursor $ List app.schema/CursorKey
+                  decode-map-as data schema/ControlState
+              (:states cursor data)
+                dispatch! $ schema/Op :states
+                  decode-map-as cursor $ List app.schema/CursorKey
+                  , data
+              (:hydrate-storage data)
+                dispatch! $ schema/Op :hydrate-storage $ decode-map-as
+                  if (struct? data) (&struct:to-map data) data
+                  , schema/Store
+              _ $ println "|unknown op" event
             , &unit
           :examples $ []
           :schema $ quote $ Fn AnyEnum (-> Unit) (:features :js-ffi) (:open :decode)
@@ -285,12 +301,12 @@
           :schema $ quote $ Fn (-> Unit)
         'render-app! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn render-app! ()
-            render! (comp-container @*store) dispatch! $ {}
+            render-app-with-options! $ {}
           :examples $ []
           :schema $ quote $ Fn (-> Unit)
         'render-app-with-options! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn render-app-with-options! (options)
-            render! (comp-container @*store) dispatch! options
+            render! (comp-container @*store) dispatch-phlox! options
           :examples $ []
           :schema $ quote $ Fn (Map Tag Dynamic) (-> Unit)
       :ns $ %{} 'NsEntry (:doc |)
@@ -339,31 +355,11 @@
           :code $ quote $ defstruct Wave (:amplitude Number) (:duration Number) (:phase Number)
           :examples $ []
           :schema $ quote StructDef
-        'decode-op $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ defn decode-op (event)
-            match event
-              (:control-state cursor data)
-                Option :some $ Op :control-state
-                  decode-map-as cursor $ List app.schema/CursorKey
-                  decode-map-as data ControlState
-              (:states cursor data)
-                Option :some $ Op :states
-                  decode-map-as cursor $ List app.schema/CursorKey
-                  , data
-              (:hydrate-storage data)
-                Option :some $ Op :hydrate-storage $ decode-map-as
-                  if (struct? data) (&struct:to-map data) data
-                  , Store
-              _ $ Option :none
-          :examples $ []
-          :schema $ quote $ Fn AnyEnum
-            -> $ Option app.schema/Op
-            :open :decode
         'store $ %{} 'CodeEntry (:doc |)
           :code $ quote $ def store
             Store :tab :drafts :x 0 :keyboard-on? false :counted 0 :states ({}) :cursor $ []
           :examples $ []
-          :schema $ quote app.schema/Store
+          :schema $ quote Store
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns app.schema
     'app.updater $ %{} 'FileEntry
