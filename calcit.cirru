@@ -276,7 +276,7 @@
               (:states cursor data)
                 dispatch! $ schema/Op :states
                   decode-map-as cursor $ List app.schema/CursorKey
-                  , data
+                  decode-map-as data $ Map Tag schema/SliderField
               (:hydrate-storage data)
                 dispatch! $ schema/Op :hydrate-storage $ decode-map-as
                   if (struct? data) (&struct:to-map data) data
@@ -336,7 +336,7 @@
         'Op $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defenum Op
             :control-state (List app.schema/CursorKey) app.schema/ControlState
-            :states (List app.schema/CursorKey) Dynamic
+            :states (List app.schema/CursorKey) (Map Tag SliderField)
             :hydrate-storage app.schema/Store
           :examples $ []
           :schema $ quote EnumDef
@@ -345,6 +345,10 @@
             :waves $ List app.schema/Wave
           :examples $ []
           :schema $ quote StructDef
+        'SliderField $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ defunion SliderField Number Bool
+          :examples $ []
+          :schema $ quote UnionDef
         'Store $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defstruct Store (:tab Tag) (:x Number) (:keyboard-on? Bool) (:counted Number)
             :states $ Map app.schema/CursorKey Dynamic
