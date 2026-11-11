@@ -23,8 +23,8 @@
           :code $ quote $ defn child-state-at-index (states idx)
             decode-map-as (>> states idx) (Map Tag Dynamic)
           :examples $ []
-          :schema $ quote $ Fn (Map Dynamic Dynamic) Number
-            -> $ Map Dynamic Dynamic
+          :schema $ quote $ Fn (Map app.schema/CursorKey Dynamic) Number
+            -> $ Map Tag Dynamic
           :tests $ [] $ %{} 'TestEntry (:name |preserves-numeric-cursor)
             :code $ quote $ assert= ([] 2)
               .unwrap $ get
@@ -105,7 +105,7 @@
                     on-change (assoc wave :phase v) d!
               comp-wave ([]) (:amplitude wave) (:duration wave) (:phase wave)
           :examples $ []
-          :schema $ quote $ Fn (Map Dynamic Dynamic) (List Number) app.schema/Wave
+          :schema $ quote $ Fn (Map Tag Dynamic) (List Number) app.schema/Wave
             Fn app.schema/Wave
               Fn app.schema/Op $ -> Unit
               -> Unit
@@ -347,7 +347,7 @@
           :schema $ quote StructDef
         'Store $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defstruct Store (:tab Tag) (:x Number) (:keyboard-on? Bool) (:counted Number)
-            :states $ Map Dynamic Dynamic
+            :states $ Map app.schema/CursorKey Dynamic
             :cursor $ List app.schema/CursorKey
           :examples $ []
           :schema $ quote StructDef
@@ -376,7 +376,7 @@
           :code $ quote $ defn write-state (store cursor data)
             assoc store :states $ decode-map-as
               assoc-in (:states store) (conj cursor :data) data
-              Map Dynamic Dynamic
+              Map app.schema/CursorKey Dynamic
           :examples $ []
           :schema $ quote $ Fn app.schema/Store (List app.schema/CursorKey) T (-> app.schema/Store) (:generics T)
       :ns $ %{} 'NsEntry (:doc |)
