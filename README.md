@@ -7,9 +7,9 @@ Fourier Panel
 
 ...Not a meaningful tool, just get those interactive shapes.
 
-### 0.41.1 升级对使用者的影响
+### 0.42.0 升级对使用者的影响
 
-请使用配套的正式 Calcit 和 `@calcit/procs` 0.41.1，重新安装依赖并构建。 Phlox 事件在渲染入口解码，应用内部只派发具名 `Op`。
+请使用配套的正式 Calcit 和 `@calcit/procs` 0.42.0，重新安装依赖并构建。 Phlox 事件在渲染入口解码，应用内部只派发具名 `Op`。
 Phlox 更新到 0.9.3，JS-FFI 更新到 0.2.13。波形公式、初始值、数字游标及相机交互沿用原行为。
 
 振幅、周期与相位用具名 `Wave` 表达。普通波形面板和环形 Factor 用 union 区分，
