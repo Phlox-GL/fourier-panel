@@ -263,7 +263,7 @@
               decode-map-as (js/Date.now) Number
             , &unit
           :examples $ []
-          :schema $ quote $ Fn schema/Op (-> Unit) (:features :js-ffi)
+          :schema $ quote $ Fn schema/Op (-> Unit) (:features :js-ffi :state)
         'dispatch-phlox! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn dispatch-phlox! (event)
             when dev? $ println |dispatch! event
@@ -281,7 +281,7 @@
               _ $ println "|unknown op" event
             , &unit
           :examples $ []
-          :schema $ quote $ Fn AnyEnum (-> Unit) (:features :js-ffi) (:open :decode)
+          :schema $ quote $ Fn AnyEnum (-> Unit) (:features :io :js-ffi :state) (:open :decode)
         'main! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn main! () (; js/console.log PIXI)
             -> (new FontFaceObserver "|Josefin Sans") (phlox.core/ffi-load-font)
@@ -289,23 +289,23 @@
             add-watch! *store :change $ fn (store prev) (render-app!)
             println "|App Started"
           :examples $ []
-          :schema $ quote $ Fn (-> Unit) (:features :js-ffi)
+          :schema $ quote $ Fn (-> Unit) (:features :io :js-ffi :state)
         'reload! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn reload! () (println "|Code updated.") (clear-phlox-caches!) (remove-watch! *store :change)
             add-watch! *store :change $ fn (store prev) (render-app!)
             render-app-with-options! $ {} $ :swap? true
           :examples $ []
-          :schema $ quote $ Fn (-> Unit)
+          :schema $ quote $ Fn (-> Unit) (:features :io :state)
         'render-app! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn render-app! ()
             render-app-with-options! $ {}
           :examples $ []
-          :schema $ quote $ Fn (-> Unit)
+          :schema $ quote $ Fn (-> Unit) (:features :io :state)
         'render-app-with-options! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn render-app-with-options! (options)
             render! (comp-container @*store) dispatch-phlox! options
           :examples $ []
-          :schema $ quote $ Fn (Map Tag Bool) (-> Unit)
+          :schema $ quote $ Fn (Map Tag Bool) (-> Unit) (:features :io :state)
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns app.main
           :require (|pixi.js :as PIXI)
@@ -371,9 +371,9 @@
                 if (nil? value) (.dissoc states :data) states
               (:none) states
           :examples $ []
-          :schema $ quote $ Fn (Map CursorKey Dynamic)
-            -> $ Map CursorKey Dynamic
-            :open :decode
+          :schema $ quote $ Fn (Map CursorKey V)
+            -> $ Map CursorKey V
+            :generics V
         'read-store $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn read-store (raw)
             let
