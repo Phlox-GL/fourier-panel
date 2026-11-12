@@ -391,7 +391,7 @@
                   (:none) root
               decode-map-as (.assoc fields :states states) Store
           :examples $ []
-          :schema $ quote $ Fn Dynamic (-> Store) (:open :decode)
+          :schema $ quote $ Fn Raw (-> Store) (:generics Raw) (:open :decode)
           :tests $ [] $ %{} 'TestEntry (:name |preserves-defaults-from-explicit-nil)
             :code $ quote $ let
                 fields $ &struct:to-map store
