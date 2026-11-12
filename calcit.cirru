@@ -60,7 +60,10 @@
                           d! $ app.schema/Op :control-state cursor $ assoc state :waves (&list:assoc waves idx new-wave)
                           , &unit
                 comp-wave-combined ([] 740 140) waves
-                comp-wave-circled (>> states :circled) ([] 1000 480) waves
+                comp-wave-circled
+                  decode-map-as (>> states :circled) (Map app.schema/CursorKey Dynamic)
+                  [] 1000 480
+                  , waves
           :examples $ []
           :schema $ quote $ Fn app.schema/Store (-> phlox.schema/PhloxElement) (:features :js-ffi)
         'comp-control-wave $ %{} 'CodeEntry (:doc |)
@@ -182,7 +185,7 @@
                       g :move-to $ .unwrap $ first points
                     -> points $ map $ fn (p) (g :line-to p)
           :examples $ []
-          :schema $ quote $ Fn (Map Dynamic Dynamic) (List Number) (List app.schema/Wave) (-> phlox.schema/PhloxElement)
+          :schema $ quote $ Fn (Map app.schema/CursorKey Dynamic) (List Number) (List app.schema/Wave) (-> phlox.schema/PhloxElement)
         'comp-wave-combined $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defcomp comp-wave-combined (position waves)
             let
@@ -349,6 +352,10 @@
           :code $ quote $ defunion SliderField Number Bool
           :examples $ []
           :schema $ quote UnionDef
+        'StatePayload $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ defunion StatePayload PanelState FactorState (Map Tag SliderField)
+          :examples $ []
+          :schema $ quote UnionDef
         'Store $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defstruct Store (:tab Tag) (:x Number) (:keyboard-on? Bool) (:counted Number)
             :states $ Map app.schema/CursorKey Dynamic
@@ -376,12 +383,33 @@
               (:hydrate-storage stored) stored
           :examples $ []
           :schema $ quote $ Fn app.schema/Store app.schema/Op String Number (-> app.schema/Store)
+          :tests $ [] $ %{} 'TestEntry (:name |preserves-mixed-state-tree)
+            :code $ quote $ let
+                panel $ app.schema/PanelState :waves $ []
+                factor $ app.schema/FactorState :factor 2
+                slider $ {} (:dragging? true) (:x0 20) (:v0 2)
+                next $ -> app.schema/store
+                  updater
+                    app.schema/Op :control-state ([]) panel
+                    , |panel 0
+                  updater
+                    app.schema/Op :control-state ([] :circled) factor
+                    , |factor 0
+                  updater
+                    app.schema/Op :states ([] 2 :amplitude) slider
+                    , |slider 0
+              assert=
+                {} (:data panel)
+                  :circled $ {} $ :data factor
+                  2 $ {} $ :amplitude
+                    {} $ :data slider
+                :states next
         'write-state $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn write-state (store cursor data)
             assoc store :states $ decode-map-as
               assoc-in (:states store) (conj cursor :data) data
               Map app.schema/CursorKey Dynamic
           :examples $ []
-          :schema $ quote $ Fn app.schema/Store (List app.schema/CursorKey) T (-> app.schema/Store) (:generics T)
+          :schema $ quote $ Fn app.schema/Store (List app.schema/CursorKey) app.schema/StatePayload (-> app.schema/Store)
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns app.updater
