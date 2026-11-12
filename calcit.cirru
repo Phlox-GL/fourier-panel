@@ -21,10 +21,10 @@
               calc-wave-height 0 10 2 $ * 0.5 &PI
         'child-state-at-index $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn child-state-at-index (states idx)
-            decode-map-as (>> states idx) (Map Tag Dynamic)
+            decode-map-as (>> states idx) (Map Tag app.schema/StateNode)
           :examples $ []
-          :schema $ quote $ Fn (Map app.schema/CursorKey Dynamic) Number
-            -> $ Map Tag Dynamic
+          :schema $ quote $ Fn (Map app.schema/CursorKey app.schema/StateNode) Number
+            -> $ Map Tag app.schema/StateNode
           :tests $ [] $ %{} 'TestEntry (:name |preserves-numeric-cursor)
             :code $ quote $ assert= ([] 2)
               .unwrap $ get
@@ -39,10 +39,7 @@
                 cursor $ []
                 states $ :states store
                 state $ match (get states :data)
-                  (:some raw)
-                    if (nil? raw)
-                      app.schema/PanelState :waves $ [] (app.schema/Wave :duration 2 :amplitude 10 :phase 1) (app.schema/Wave :duration 2 :amplitude 10 :phase 1) (app.schema/Wave :duration 2 :amplitude 10 :phase 1)
-                      decode-map-as raw app.schema/PanelState
+                  (:some raw) (decode-map-as raw app.schema/PanelState)
                   (:none)
                     app.schema/PanelState :waves $ [] (app.schema/Wave :duration 2 :amplitude 10 :phase 1) (app.schema/Wave :duration 2 :amplitude 10 :phase 1) (app.schema/Wave :duration 2 :amplitude 10 :phase 1)
                 waves $ :waves state
@@ -61,7 +58,7 @@
                           , &unit
                 comp-wave-combined ([] 740 140) waves
                 comp-wave-circled
-                  decode-map-as (>> states :circled) (Map app.schema/CursorKey Dynamic)
+                  decode-map-as (>> states :circled) (Map app.schema/CursorKey app.schema/StateNode)
                   [] 1000 480
                   , waves
           :examples $ []
@@ -108,7 +105,7 @@
                     on-change (assoc wave :phase v) d!
               comp-wave ([]) (:amplitude wave) (:duration wave) (:phase wave)
           :examples $ []
-          :schema $ quote $ Fn (Map Tag Dynamic) (List Number) app.schema/Wave
+          :schema $ quote $ Fn (Map Tag app.schema/StateNode) (List Number) app.schema/Wave
             Fn app.schema/Wave
               Fn app.schema/Op $ -> Unit
               -> Unit
@@ -147,8 +144,7 @@
                   .unwrap $ get states :cursor
                   List app.schema/CursorKey
                 state $ match (get states :data)
-                  (:some raw)
-                    if (nil? raw) (app.schema/FactorState :factor 1) (decode-map-as raw app.schema/FactorState)
+                  (:some raw) (decode-map-as raw app.schema/FactorState)
                   (:none) (app.schema/FactorState :factor 1)
                 points $ -> (range 200)
                   map $ fn (x)
@@ -185,7 +181,7 @@
                       g :move-to $ .unwrap $ first points
                     -> points $ map $ fn (p) (g :line-to p)
           :examples $ []
-          :schema $ quote $ Fn (Map app.schema/CursorKey Dynamic) (List Number) (List app.schema/Wave) (-> phlox.schema/PhloxElement)
+          :schema $ quote $ Fn (Map app.schema/CursorKey app.schema/StateNode) (List Number) (List app.schema/Wave) (-> phlox.schema/PhloxElement)
         'comp-wave-combined $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defcomp comp-wave-combined (position waves)
             let
@@ -281,9 +277,7 @@
                   decode-map-as cursor $ List app.schema/CursorKey
                   decode-map-as data $ Map Tag schema/SliderField
               (:hydrate-storage data)
-                dispatch! $ schema/Op :hydrate-storage $ decode-map-as
-                  if (struct? data) (&struct:to-map data) data
-                  , schema/Store
+                dispatch! $ schema/Op :hydrate-storage $ schema/read-store data
               _ $ println "|unknown op" event
             , &unit
           :examples $ []
@@ -311,7 +305,7 @@
           :code $ quote $ defn render-app-with-options! (options)
             render! (comp-container @*store) dispatch-phlox! options
           :examples $ []
-          :schema $ quote $ Fn (Map Tag Dynamic) (-> Unit)
+          :schema $ quote $ Fn (Map Tag Bool) (-> Unit)
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns app.main
           :require (|pixi.js :as PIXI)
@@ -352,13 +346,17 @@
           :code $ quote $ defunion SliderField Number Bool
           :examples $ []
           :schema $ quote UnionDef
+        'StateNode $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ defunion StateNode app.schema/PanelState app.schema/FactorState app.schema/SliderField (List app.schema/CursorKey) (Map app.schema/CursorKey app.schema/StateNode)
+          :examples $ []
+          :schema $ quote UnionDef
         'StatePayload $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defunion StatePayload PanelState FactorState (Map Tag SliderField)
           :examples $ []
           :schema $ quote UnionDef
         'Store $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defstruct Store (:tab Tag) (:x Number) (:keyboard-on? Bool) (:counted Number)
-            :states $ Map app.schema/CursorKey Dynamic
+            :states $ Map app.schema/CursorKey app.schema/StateNode
             :cursor $ List app.schema/CursorKey
           :examples $ []
           :schema $ quote StructDef
@@ -366,6 +364,50 @@
           :code $ quote $ defstruct Wave (:amplitude Number) (:duration Number) (:phase Number)
           :examples $ []
           :schema $ quote StructDef
+        'drop-nil-state-data $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ defn drop-nil-state-data (states)
+            match (get states :data)
+              (:some value)
+                if (nil? value) (.dissoc states :data) states
+              (:none) states
+          :examples $ []
+          :schema $ quote $ Fn (Map CursorKey Dynamic)
+            -> $ Map CursorKey Dynamic
+            :open :decode
+        'read-store $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ defn read-store (raw)
+            let
+                fields $ decode-map-as
+                  if (struct? raw) (&struct:to-map raw) raw
+                  Map Tag Dynamic
+                root $ drop-nil-state-data $ decode-map-as
+                  .unwrap $ get fields :states
+                  Map CursorKey Dynamic
+                states $ match (get root :circled)
+                  (:some branch)
+                    if (map? branch)
+                      .assoc root :circled $ drop-nil-state-data $ decode-map-as branch (Map CursorKey Dynamic)
+                      , root
+                  (:none) root
+              decode-map-as (.assoc fields :states states) Store
+          :examples $ []
+          :schema $ quote $ Fn Dynamic (-> Store) (:open :decode)
+          :tests $ [] $ %{} 'TestEntry (:name |preserves-defaults-from-explicit-nil)
+            :code $ quote $ let
+                fields $ &struct:to-map store
+                slider $ {} (:dragging? true) (:x0 20)
+                legacy $ {} (:data nil)
+                  :circled $ {} $ :data nil
+                  2 $ {} $ :amplitude
+                    {} $ :data slider
+                restored $ read-store $ assoc fields :states legacy
+              assert=
+                {}
+                  :circled $ {}
+                  2 $ {} $ :amplitude
+                    {} $ :data slider
+                :states restored
+              assert= store $ read-store store
         'store $ %{} 'CodeEntry (:doc |)
           :code $ quote $ def store
             Store :tab :drafts :x 0 :keyboard-on? false :counted 0 :states ({}) :cursor $ []
@@ -408,7 +450,7 @@
           :code $ quote $ defn write-state (store cursor data)
             assoc store :states $ decode-map-as
               assoc-in (:states store) (conj cursor :data) data
-              Map app.schema/CursorKey Dynamic
+              Map app.schema/CursorKey app.schema/StateNode
           :examples $ []
           :schema $ quote $ Fn app.schema/Store (List app.schema/CursorKey) app.schema/StatePayload (-> app.schema/Store)
       :ns $ %{} 'NsEntry (:doc |)
