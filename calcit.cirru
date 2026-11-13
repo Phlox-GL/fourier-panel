@@ -281,7 +281,7 @@
               _ $ println "|unknown op" event
             , &unit
           :examples $ []
-          :schema $ quote $ Fn AnyEnum (-> Unit) (:features :io :js-ffi :state) (:open :decode)
+          :schema $ quote $ Fn Input (-> Unit) (:generics Input) (:features :io :js-ffi :state)
         'main! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn main! () (; js/console.log PIXI)
             -> (new FontFaceObserver "|Josefin Sans") (phlox.core/ffi-load-font)
