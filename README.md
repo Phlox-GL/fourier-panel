@@ -7,10 +7,10 @@ Fourier Panel
 
 ...Not a meaningful tool, just get those interactive shapes.
 
-### 0.43.0 升级对使用者的影响
+### 0.44.0 升级对使用者的影响
 
-构建时请配对使用 Calcit 和 `@calcit/procs` 0.43.0，并重新安装依赖。Phlox 更新到
-0.9.6，JS-FFI 更新到 0.2.18；波形计算、交互和已有存档读取方式不变。
+构建时请配对使用 Calcit 和 `@calcit/procs` 0.44.0，并重新安装依赖。Phlox 更新到
+0.9.7，JS-FFI 更新到 0.2.18；波形计算、交互和已有存档读取方式不变。
 
 ### 0.42.1 升级对使用者的影响
 
@@ -21,7 +21,7 @@ Phlox 更新到 0.9.3，JS-FFI 更新到 0.2.13。波形公式、初始值、数
 滑块直接派发对应的具名操作。旧状态 Map 在读取时解码，缺失时仍使用原默认值。
 Phlox 组件的混合游标和状态继续走原事件入口。
 
-CI 沿用完整 strict、原两项回归和隔离 COS 预览，上传使用 Action 内置 verify。
+CI 沿用完整 strict、四项附带回归和隔离 COS 预览，上传使用 Action 内置 verify。
 
 ### 历史 0.31.0 升级
 
