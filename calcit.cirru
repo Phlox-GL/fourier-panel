@@ -118,23 +118,17 @@
                     [] (* 3 x) (calc-wave-height x amplitude duration phase)
               container
                 {} $ :position position
-                graphics $ {} $ :ops
+                path-graphics ([] 0 0)
                   concat
                     []
-                      g :line-style $ {}
-                        :color $ hslx 0 0 100
-                        :width 1
-                        :alpha 0.3
-                      g :move-to $ [] 0 0
-                      g :line-to $ [] 200 0
-                      g :move-to $ [] 0 -20
-                      g :line-to $ [] 0 20
-                      g :line-style $ {}
-                        :color $ hslx 0 0 100
-                        :width 1
-                        :alpha 1
-                      g :move-to $ .unwrap $ first points
-                    -> points $ map $ fn (p) ([] :line-to p)
+                      PathOp :line-style (hslx 0 0 100) 1 0.3
+                      PathOp :move-to $ [] 0 0
+                      PathOp :line-to $ [] 200 0
+                      PathOp :move-to $ [] 0 -20
+                      PathOp :line-to $ [] 0 20
+                      PathOp :line-style (hslx 0 0 100) 1 1
+                      PathOp :move-to $ .unwrap $ first points
+                    -> points $ map $ fn (p) (PathOp :line-to p)
           :examples $ []
           :schema $ quote $ Fn (List Number) Number Number Number (-> phlox.schema/PhloxElement)
         'comp-wave-circled $ %{} 'CodeEntry (:doc |)
@@ -171,15 +165,12 @@
                         Fn app.schema/Op $ -> Unit
                         -> Unit
                       d! $ app.schema/Op :control-state cursor $ assoc state :factor v
-                graphics $ {} $ :ops
+                path-graphics ([] 0 0)
                   concat
                     []
-                      g :line-style $ {}
-                        :color $ hslx 0 0 100
-                        :width 1
-                        :alpha 1
-                      g :move-to $ .unwrap $ first points
-                    -> points $ map $ fn (p) (g :line-to p)
+                      PathOp :line-style (hslx 0 0 100) 1 1
+                      PathOp :move-to $ .unwrap $ first points
+                    -> points $ map $ fn (p) (PathOp :line-to p)
           :examples $ []
           :schema $ quote $ Fn (Map app.schema/CursorKey app.schema/StateNode) (List Number) (List app.schema/Wave) (-> phlox.schema/PhloxElement)
         'comp-wave-combined $ %{} 'CodeEntry (:doc |)
@@ -194,29 +185,24 @@
                         .foldl 0 &+
               container
                 {} $ :position position
-                graphics $ {} $ :ops
+                path-graphics ([] 0 0)
                   concat
                     []
-                      g :line-style $ {}
-                        :color $ hslx 0 0 100
-                        :width 1
-                        :alpha 0.3
-                      g :move-to $ [] 0 0
-                      g :line-to $ [] 200 0
-                      g :move-to $ [] 0 -20
-                      g :line-to $ [] 0 20
-                      g :line-style $ {}
-                        :color $ hslx 0 0 100
-                        :width 1
-                        :alpha 1
-                      g :move-to $ .unwrap $ first points
-                    -> points $ map $ fn (p) (g :line-to p)
+                      PathOp :line-style (hslx 0 0 100) 1 0.3
+                      PathOp :move-to $ [] 0 0
+                      PathOp :line-to $ [] 200 0
+                      PathOp :move-to $ [] 0 -20
+                      PathOp :line-to $ [] 0 20
+                      PathOp :line-style (hslx 0 0 100) 1 1
+                      PathOp :move-to $ .unwrap $ first points
+                    -> points $ map $ fn (p) (PathOp :line-to p)
           :examples $ []
           :schema $ quote $ Fn (List Number) (List app.schema/Wave) (-> phlox.schema/PhloxElement)
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns app.comp.container
           :require
-            phlox.core :refer $ defcomp g hslx rect circle text container graphics create-list >>
+            phlox.core :refer $ defcomp hslx rect circle text container path-graphics create-list >>
+            phlox.schema :refer $ PathOp
             phlox.comp.slider :refer $ comp-slider
     'app.config $ %{} 'FileEntry
       :defs $ {}
