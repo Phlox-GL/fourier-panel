@@ -7,10 +7,10 @@ Fourier Panel
 
 ...Not a meaningful tool, just get those interactive shapes.
 
-### 0.45.0 升级对使用者的影响
+### 0.45.1 升级对使用者的影响
 
-构建时请配对使用 Calcit 和 `@calcit/procs` 0.45.0，并重新安装依赖。Phlox 更新到
-0.12.1，JS-FFI 更新到 0.2.23；波形计算、交互和已有存档读取方式不变。Phlox 的布尔属性要求 Bool，非法旧数据可能更早报错。
+构建时请配对使用 Calcit 和 `@calcit/procs` 0.45.1，并重新安装依赖。Phlox 更新到
+0.12.2，JS-FFI 更新到 0.2.24；波形计算、交互和已有存档读取方式不变。Phlox 的布尔属性要求 Bool，非法旧数据可能更早报错。
 
 ### 0.42.1 升级对使用者的影响
 
