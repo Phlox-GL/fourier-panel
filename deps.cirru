@@ -1,5 +1,5 @@
 
-{} (:calcit-version |0.44.0)
+{} (:calcit-version |0.45.1)
   :version |0.4.4
-  :dependencies $ {} (|Phlox-GL/phlox |0.10.0)
-    |calcit-lang/js-ffi |0.2.19
+  :dependencies $ {} (|Phlox-GL/phlox |0.12.2)
+    |calcit-lang/js-ffi |0.2.24
